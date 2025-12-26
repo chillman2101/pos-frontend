@@ -4,19 +4,19 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
   const getStockBadge = (stock, minStock) => {
     if (stock === 0) {
       return (
-        <span className="px-2 py-1 bg-red-100 text-red-700 -text-xs rounded-full">
+        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
           Out of Stock
         </span>
       );
     } else if (stock <= minStock) {
       return (
-        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 -text-xs rounded-full">
+        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
           Low Stock
         </span>
       );
     } else {
       return (
-        <span className="px-2 py-1 bg-success-100 text-success-700 -text-xs rounded-full">
+        <span className="px-2 py-1 bg-success-100 text-success-700 text-xs rounded-full">
           In Stock
         </span>
       );
@@ -63,7 +63,7 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
           {products.map((product) => (
             <tr
               key={product.id}
-              className="hover:bg-netural-50 transition-colors"
+              className="hover:bg-neutral-50 transition-colors"
             >
               <td className="px-4 py-3">
                 <div className="w-12 h-12 bg-neutral-200 rounded-lg overflow-hidden">
@@ -82,7 +82,7 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
               </td>
 
               <td className="px-4 py-3">
-                <p className="font-medium text-natural-900">{product.name}</p>
+                <p className="font-medium text-neutral-900">{product.name}</p>
                 {product.description && (
                   <p className="text-sm text-neutral-600 truncate max-w-xs">
                     {product.description}

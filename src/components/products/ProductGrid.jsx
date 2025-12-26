@@ -40,7 +40,7 @@ const ProductGrid = ({ products, onEdit, onDelete }) => {
         return (
           <div
             key={product.id}
-            className="bg-white border border-netural-200 rounded-x1 hover:shadow-lg transition-all duration-200 overflow-hidden group"
+            className="bg-white border border-neutral-200 rounded-xl hover:shadow-lg transition-all duration-200 overflow-hidden group"
           >
             <div className="relative h-48 bg-neutral-100 overflow-hidden">
               {product.image_url ? (
