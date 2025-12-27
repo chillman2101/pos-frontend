@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Bell, Wifi, WifiOff, Menu } from "lucide-react";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
+import { useNotifications } from "../../contexts/NotificationContext";
+import NotificationPanel from "./NotificationPanel";
 
 const Header = ({ title, onMenuClick }) => {
   const isOnline = useNetworkStatus();
+  const { unreadCount } = useNotifications();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   return (
     <header className="h-16 bg-white border-b border-neutral-200 fixed top-0 right-0 lg:left-64 left-0 z-10">
@@ -41,12 +45,25 @@ const Header = ({ title, onMenuClick }) => {
           </div>
 
           {/* Notifications */}
-          <button className="relative p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
+
+      {/* Notification Panel */}
+      <NotificationPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </header>
   );
 };

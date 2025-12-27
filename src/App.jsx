@@ -4,6 +4,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
+import Categories from './pages/Categories';
+import Transaction from './pages/Transaction';
+import TransactionHistory from './pages/TransactionHistory';
 import TestAPI from './pages/TestAPI';
 import useAuthStore from './store/authStore';
 
@@ -36,6 +39,33 @@ function App() {
           element={
             <ProtectedRoute>
               <Products />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/categories"
+          element={
+            <ProtectedRoute>
+              <Categories />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/transaction"
+          element={
+            <ProtectedRoute>
+              <Transaction />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/transaction-history"
+          element={
+            <ProtectedRoute>
+              <TransactionHistory />
             </ProtectedRoute>
           }
         />

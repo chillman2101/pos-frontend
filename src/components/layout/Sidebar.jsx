@@ -10,6 +10,8 @@ import {
   LogOut,
   Store,
   X,
+  FolderOpen,
+  History,
 } from "lucide-react";
 import useAuthStore from "../../store/authStore";
 
@@ -30,10 +32,22 @@ const Sidebar = ({ isOpen = false, onClose }) => {
       roles: ["admin", "manager", "cashier"],
     },
     {
+      path: "/transaction-history",
+      icon: History,
+      label: "Riwayat Transaksi",
+      roles: ["admin", "manager", "cashier"],
+    },
+    {
       path: "/products",
       icon: Package,
       label: "Produk",
       roles: ["admin", "manager", "cashier"],
+    },
+    {
+      path: "/categories",
+      icon: FolderOpen,
+      label: "Kategori",
+      roles: ["admin", "manager"],
     },
     {
       path: "/users",
