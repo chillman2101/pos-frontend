@@ -496,18 +496,40 @@ const Products = () => {
       {!loading && !error && (
         <>
           <Card>
-            {viewMode === "table" ? (
-              <ProductTable
-                products={products}
-                onEdit={handleEditProduct}
-                onDelete={handleDeleteProduct}
-              />
+            {products.length === 0 ? (
+              /* Empty State */
+              <div className="text-center py-16">
+                <Package className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                  Belum Ada Produk
+                </h3>
+                <p className="text-neutral-600 mb-6">
+                  {searchQuery || selectedCategory
+                    ? "Tidak ada produk yang sesuai dengan filter."
+                    : "Mulai tambahkan produk pertama Anda."}
+                </p>
+                {!searchQuery && !selectedCategory && (
+                  <Button variant="primary" size="md" onClick={handleAddProduct}>
+                    <Plus className="w-5 h-5 mr-2" />
+                    Tambah Produk Pertama
+                  </Button>
+                )}
+              </div>
             ) : (
-              <ProductGrid
-                products={products}
-                onEdit={handleEditProduct}
-                onDelete={handleDeleteProduct}
-              />
+              /* Product Table/Grid */
+              viewMode === "table" ? (
+                <ProductTable
+                  products={products}
+                  onEdit={handleEditProduct}
+                  onDelete={handleDeleteProduct}
+                />
+              ) : (
+                <ProductGrid
+                  products={products}
+                  onEdit={handleEditProduct}
+                  onDelete={handleDeleteProduct}
+                />
+              )
             )}
           </Card>
 
