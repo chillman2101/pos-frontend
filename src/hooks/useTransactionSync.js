@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { dbHelpers } from '../db';
 import transactionApi from '../api/transactionApi';
 import { useNetworkStatus } from './useNetworkStatus';
@@ -13,6 +13,7 @@ export const useTransactionSync = () => {
   const [lastSync, setLastSync] = useState(null);
   const [syncError, setSyncError] = useState(null);
   const isOnline = useNetworkStatus();
+  const syncInProgressRef = useRef(false);
 
   /**
    * Get the count of pending (unsynced) transactions
@@ -30,7 +31,14 @@ export const useTransactionSync = () => {
    * Sync pending transactions to the server
    */
   const syncTransactionsToServer = useCallback(async () => {
+    // Prevent concurrent syncs
+    if (syncInProgressRef.current) {
+      console.log('⏭️ Sync already in progress, skipping...');
+      return { success: false, message: 'Sync already in progress' };
+    }
+
     try {
+      syncInProgressRef.current = true;
       setIsSyncing(true);
       setSyncError(null);
 
@@ -112,6 +120,7 @@ export const useTransactionSync = () => {
         error
       };
     } finally {
+      syncInProgressRef.current = false;
       setIsSyncing(false);
     }
   }, [pendingCount, updatePendingCount]);
@@ -131,23 +140,37 @@ export const useTransactionSync = () => {
   }, [isOnline, syncTransactionsToServer]);
 
   /**
-   * Auto-sync when network comes back online
+   * Auto-sync when network status changes to online
    */
   useEffect(() => {
-    const handleOnline = async () => {
-      console.log('🌐 Network reconnected, auto-syncing transactions...');
-
-      if (pendingCount > 0) {
-        await syncTransactionsToServer();
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [pendingCount, syncTransactionsToServer]);
+    if (isOnline && pendingCount > 0 && !syncInProgressRef.current) {
+      console.log('🌐 Network is online, auto-syncing transactions...');
+      syncTransactionsToServer();
+    }
+  }, [isOnline]); // Only trigger when isOnline changes
 
   /**
-   * Update pending count on mount and when needed
+   * Periodic check and sync for pending transactions when online
+   */
+  useEffect(() => {
+    if (!isOnline) return;
+
+    // Check and sync every 5 seconds when online
+    const interval = setInterval(async () => {
+      await updatePendingCount();
+
+      const pending = await dbHelpers.getPendingTransactions();
+      if (pending.length > 0 && !syncInProgressRef.current) {
+        console.log(`⏰ Periodic sync: Found ${pending.length} pending transactions, syncing...`);
+        await syncTransactionsToServer();
+      }
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isOnline, syncTransactionsToServer, updatePendingCount]);
+
+  /**
+   * Update pending count on mount
    */
   useEffect(() => {
     updatePendingCount();

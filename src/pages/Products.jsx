@@ -339,13 +339,13 @@ const Products = () => {
   return (
     <MainLayout title="Products">
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-neutral-900">
             Manage Products
           </h2>
-          <div className="flex items-center gap-3 mt-1">
-            <p className="text-neutral-600">
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <p className="text-neutral-600 text-sm sm:text-base">
               Kelola produk dan inventory Anda
             </p>
             {/* Offline Indicator */}
@@ -365,24 +365,26 @@ const Products = () => {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Toggle View */}
-          <Button
-            variant={viewMode === "table" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("table")}
-          >
-            <TableIcon className="w-4 h-4 mr-1" />
-            Table
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-          >
-            <GridIcon className="w-4 h-4 mr-1" />
-            Grid
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "table" ? "primary" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+            >
+              <TableIcon className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Table</span>
+            </Button>
+            <Button
+              variant={viewMode === "grid" ? "primary" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+            >
+              <GridIcon className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Grid</span>
+            </Button>
+          </div>
 
           {/* Sync Button */}
           {isOnline && (
@@ -392,21 +394,21 @@ const Products = () => {
               onClick={handleSync}
               disabled={isSyncing}
             >
-              <RefreshCw className={`w-4 h-4 mr-1 ${isSyncing ? 'animate-spin' : ''}`} />
-              Sync
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''} sm:mr-1`} />
+              <span className="hidden sm:inline">Sync</span>
             </Button>
           )}
 
           {/* Add Product Button */}
-          <Button variant="primary" size="sm" onClick={handleAddProduct}>
+          <Button variant="primary" size="sm" onClick={handleAddProduct} className="flex-1 sm:flex-initial">
             <Plus className="w-5 h-5 mr-2" />
-            Add Product
+            <span>Add Product</span>
           </Button>
         </div>
       </div>
 
       {/* Search & Filter Bar - Always visible */}
-      <div className="mb-6 flex gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
         {/* Search Bar */}
         <div className="flex-1">
           <SearchBar

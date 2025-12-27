@@ -68,22 +68,22 @@ const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="p-3 sm:p-4 border-b border-neutral-200 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
               {isPending ? (
-                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0" />
               ) : (
-                <CheckCircle className="w-6 h-6 text-success-600" />
+                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-success-600 flex-shrink-0" />
               )}
               <div>
-                <h3 className="text-xl font-bold text-neutral-900">
+                <h3 className="text-lg sm:text-xl font-bold text-neutral-900">
                   {isPending ? "Transaksi Pending" : "Transaksi Berhasil!"}
                 </h3>
                 {isPending && (
-                  <p className="text-sm text-yellow-600 mt-0.5">
+                  <p className="text-xs sm:text-sm text-yellow-600 mt-0.5">
                     Akan di-sync saat online
                   </p>
                 )}
@@ -91,17 +91,17 @@ const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-lg transition-colors flex-shrink-0"
             >
               <X className="w-5 h-5 text-neutral-500" />
             </button>
           </div>
 
           {/* Receipt Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6">
             <div
               ref={receiptRef}
-              className="bg-white p-8 space-y-6"
+              className="bg-white p-4 sm:p-8 space-y-4 sm:space-y-6"
               style={{ fontFamily: "monospace" }}
             >
               {/* Store Header */}
@@ -280,13 +280,14 @@ const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
           </div>
 
           {/* Footer Actions */}
-          <div className="p-4 border-t border-neutral-200 flex gap-3">
+          <div className="p-3 sm:p-4 border-t border-neutral-200 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button variant="outline" fullWidth onClick={onClose}>
               Tutup
             </Button>
             <Button variant="primary" fullWidth onClick={handleDownloadPDF}>
               <Download className="w-4 h-4 mr-2" />
-              Download PDF
+              <span className="hidden sm:inline">Download PDF</span>
+              <span className="sm:hidden">PDF</span>
             </Button>
           </div>
         </div>

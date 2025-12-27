@@ -9,10 +9,13 @@ import {
   Database,
   Save,
   RefreshCw,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import useAuthStore from '../store/authStore';
 import settingsApi from '../api/settingsApi';
+import { db } from '../db';
 
 const Settings = () => {
   const toast = useToast();
@@ -111,6 +114,33 @@ const Settings = () => {
       toast.error('Failed to save settings: ' + error.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleClearDatabase = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to clear all local data? This will:\n\n' +
+      '• Delete all cached products\n' +
+      '• Delete all offline transactions\n' +
+      '• Clear dashboard cache\n\n' +
+      'This action cannot be undone. Data will be re-synced from server when you go online.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // Delete the database
+      await db.delete();
+
+      toast.success('Database cleared successfully! Page will reload...');
+
+      // Reload page after 1 second to reinitialize database
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Error clearing database:', error);
+      toast.error('Failed to clear database: ' + error.message);
     }
   };
 
@@ -540,6 +570,36 @@ const Settings = () => {
                           />
                         </div>
                       )}
+
+                      {/* Database Management */}
+                      <div className="border-t border-neutral-200 pt-6 mt-6">
+                        <h4 className="text-md font-bold text-neutral-900 mb-4">
+                          Database Management
+                        </h4>
+
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3 mb-4">
+                            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-medium text-red-900 mb-1">
+                                Clear Local Database
+                              </p>
+                              <p className="text-sm text-red-700">
+                                This will delete all cached data including products, transactions, and dashboard cache.
+                                Use this if you're experiencing database errors or need to reset the app.
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={handleClearDatabase}
+                            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Clear Database & Reload
+                          </button>
+                        </div>
+                      </div>
 
                       <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-1">

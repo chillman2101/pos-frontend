@@ -295,20 +295,20 @@ const Transaction = () => {
       {/* Pending Sync Indicator */}
       {pendingCount > 0 && (
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-          <div className="flex items-center gap-3">
-            <RefreshCw className="w-5 h-5 text-blue-700" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <RefreshCw className="w-5 h-5 text-blue-700 flex-shrink-0" />
             <div className="flex-1">
               <p className="font-semibold text-blue-700">
                 {pendingCount} transaksi menunggu sync
               </p>
               <p className="text-sm text-blue-600 mt-0.5">
-                Klik tombol sync untuk mengirim ke server
+                {isOnline ? 'Klik tombol sync untuk mengirim ke server' : 'Akan di-sync otomatis saat online'}
               </p>
             </div>
             <button
               onClick={handleSync}
               disabled={!isOnline || isSyncing}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium"
             >
               <RefreshCw
                 className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`}
