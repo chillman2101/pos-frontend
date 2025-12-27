@@ -148,20 +148,22 @@ const Products = () => {
           const response = await productApi.getProducts(params);
           console.log("✅ Server response:", response);
 
-          if (response.success && response.data) {
-            setProducts(response.data);
+          if (response.success) {
+            // Success response from server (even if data is empty array)
+            setProducts(response.data || []);
             setIsOfflineMode(false);
+            setError(null); // Clear any previous errors
 
             // Update pagination info
             if (response.pagination) {
               setTotalPages(response.pagination.total_pages || 1);
-              setTotalItems(response.pagination.total_rows || response.data.length);
+              setTotalItems(response.pagination.total_rows || (response.data || []).length);
             } else {
-              setTotalItems(response.data.length);
-              setTotalPages(Math.ceil(response.data.length / itemsPerPage));
+              setTotalItems((response.data || []).length);
+              setTotalPages(Math.ceil((response.data || []).length / itemsPerPage));
             }
             setLoading(false);
-            return; // Success, exit
+            return; // Success, exit (even with empty data)
           } else {
             console.warn("⚠️ Server returned unsuccessful response");
           }
@@ -198,13 +200,15 @@ const Products = () => {
 
       console.log("📦 IndexedDB result:", offlineResult);
 
-      if (offlineResult.data && offlineResult.data.length > 0) {
-        setProducts(offlineResult.data);
-        setTotalPages(Math.ceil(offlineResult.total / itemsPerPage));
-        setTotalItems(offlineResult.total);
+      setProducts(offlineResult.data || []);
+      setTotalPages(Math.ceil((offlineResult.total || 0) / itemsPerPage) || 1);
+      setTotalItems(offlineResult.total || 0);
+
+      // Only show offline error if there's NO data in IndexedDB
+      if (!offlineResult.data || offlineResult.data.length === 0) {
+        setError("📴 Mode Offline: Belum ada data tersimpan. Silakan online dan sync data terlebih dahulu.");
       } else {
-        setProducts([]);
-        setError("No offline data available. Please go online and sync data first.");
+        setError(null);
       }
 
     } catch (error) {
