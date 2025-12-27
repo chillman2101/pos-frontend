@@ -7,9 +7,19 @@ export const db = new Dexie('POSDatabase');
 db.version(1).stores({
   products: 'id, name, sku, category_id, price, stock, is_active',
   categories: 'id, name',
-  transactions: 'id, transaction_code, client_transaction_id, final_amount, payment_method, synced, created_at',
+  transactions: '++local_id, id, transaction_code, client_transaction_id, final_amount, payment_method, synced, created_at',
   syncQueue: '++id, type, entity, data, timestamp',
   metadata: 'key, value'
+});
+
+// Version 2: Add dashboard cache
+db.version(2).stores({
+  products: 'id, name, sku, category_id, price, stock, is_active',
+  categories: 'id, name',
+  transactions: '++local_id, id, transaction_code, client_transaction_id, final_amount, payment_method, synced, created_at',
+  syncQueue: '++id, type, entity, data, timestamp',
+  metadata: 'key, value',
+  dashboardCache: 'key, data, timestamp'
 });
 
 // Helper functions
@@ -251,9 +261,9 @@ export const dbHelpers = {
       const transaction = await this.getTransactionByClientId(clientTransactionId);
 
       if (transaction) {
-        await db.transactions.update(transaction.id, {
+        await db.transactions.update(transaction.local_id, {
           synced: true,
-          id: serverData.id || transaction.id,
+          id: serverData.id,
           transaction_code: serverData.transaction_code || transaction.transaction_code,
           synced_at: new Date().toISOString()
         });
@@ -273,7 +283,7 @@ export const dbHelpers = {
       .toArray();
 
     for (const tx of syncedTransactions) {
-      await db.transactions.delete(tx.id);
+      await db.transactions.delete(tx.local_id);
     }
   },
 
@@ -294,12 +304,58 @@ export const dbHelpers = {
       console.log('✅ Stock rollback completed for transaction:', clientTransactionId);
 
       // Delete the failed transaction
-      await db.transactions.delete(transaction.id);
+      await db.transactions.delete(transaction.local_id);
 
       return true;
     } catch (error) {
       console.error('Error rolling back stock:', error);
       throw error;
+    }
+  },
+
+  // Dashboard Cache
+  async cacheDashboardData(key, data) {
+    try {
+      await db.dashboardCache.put({
+        key,
+        data,
+        timestamp: new Date().toISOString()
+      });
+      console.log(`📊 Dashboard data cached: ${key}`);
+    } catch (error) {
+      console.error('Error caching dashboard data:', error);
+    }
+  },
+
+  async getCachedDashboardData(key) {
+    try {
+      const cached = await db.dashboardCache.get(key);
+      if (cached) {
+        // Check if cache is still fresh (less than 5 minutes old)
+        const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
+        const fiveMinutes = 5 * 60 * 1000;
+
+        if (cacheAge < fiveMinutes) {
+          console.log(`📊 Using cached dashboard data: ${key}`);
+          return cached.data;
+        } else {
+          console.log(`📊 Cache expired for: ${key}`);
+          await db.dashboardCache.delete(key);
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting cached dashboard data:', error);
+      return null;
+    }
+  },
+
+  async clearDashboardCache() {
+    try {
+      await db.dashboardCache.clear();
+      console.log('📊 Dashboard cache cleared');
+    } catch (error) {
+      console.error('Error clearing dashboard cache:', error);
     }
   }
 };

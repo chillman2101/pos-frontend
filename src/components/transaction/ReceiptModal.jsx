@@ -1,12 +1,37 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { X, Download, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "../common";
 import html2pdf from "html2pdf.js";
 import useAuthStore from "../../store/authStore";
+import settingsApi from "../../api/settingsApi";
 
 const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
   const receiptRef = useRef();
   const { user } = useAuthStore();
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadSettings();
+    }
+  }, [isOpen]);
+
+  const loadSettings = async () => {
+    try {
+      const response = await settingsApi.getSettings();
+      if (response.success && response.data) {
+        setSettings(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+      // Use defaults if settings fail to load
+      setSettings({
+        store: { store_name: "TOKO POS", store_address: "Jl. Contoh No. 123, Jakarta", store_phone: "(021) 1234-5678" },
+        tax: { tax_enabled: false, tax_rate: 10, tax_label: "PPN" },
+        receipt: { show_logo: false, show_address: true, show_phone: true, footer_text: "Terima kasih atas kunjungan Anda!" }
+      });
+    }
+  };
 
   if (!isOpen || !transaction) return null;
 
@@ -81,13 +106,19 @@ const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
             >
               {/* Store Header */}
               <div className="text-center border-b border-dashed border-neutral-300 pb-4">
-                <h1 className="text-2xl font-bold">TOKO POS</h1>
-                <p className="text-sm text-neutral-600 mt-1">
-                  Jl. Contoh No. 123, Jakarta
-                </p>
-                <p className="text-sm text-neutral-600">
-                  Telp: (021) 1234-5678
-                </p>
+                <h1 className="text-2xl font-bold">
+                  {settings?.store?.store_name || "TOKO POS"}
+                </h1>
+                {settings?.receipt?.show_address !== false && (
+                  <p className="text-sm text-neutral-600 mt-1">
+                    {settings?.store?.store_address || "Jl. Contoh No. 123, Jakarta"}
+                  </p>
+                )}
+                {settings?.receipt?.show_phone !== false && (
+                  <p className="text-sm text-neutral-600">
+                    Telp: {settings?.store?.store_phone || "(021) 1234-5678"}
+                  </p>
+                )}
               </div>
 
               {/* Transaction Info */}
@@ -173,9 +204,9 @@ const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
                   </div>
                 )}
 
-                {transaction.tax_amount > 0 && (
+                {transaction.tax_amount > 0 && settings?.tax?.tax_enabled !== false && (
                   <div className="flex justify-between">
-                    <span>Pajak:</span>
+                    <span>{settings?.tax?.tax_label || "Pajak"}:</span>
                     <span>
                       + Rp {transaction.tax_amount.toLocaleString("id-ID")}
                     </span>
@@ -239,7 +270,7 @@ const ReceiptModal = ({ transaction, isOpen, onClose, isPending = false }) => {
 
               {/* Footer */}
               <div className="text-center text-sm text-neutral-600 border-t border-dashed border-neutral-300 pt-4">
-                <p>Terima kasih atas kunjungan Anda!</p>
+                <p>{settings?.receipt?.footer_text || "Terima kasih atas kunjungan Anda!"}</p>
                 <p className="mt-1">
                   Barang yang sudah dibeli tidak dapat ditukar
                 </p>

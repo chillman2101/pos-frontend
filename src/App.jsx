@@ -8,6 +8,8 @@ import Categories from './pages/Categories';
 import Transaction from './pages/Transaction';
 import TransactionHistory from './pages/TransactionHistory';
 import Users from './pages/Users';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import TestAPI from './pages/TestAPI';
 import useAuthStore from './store/authStore';
 
@@ -76,6 +78,24 @@ function App() {
           element={
             <ProtectedRoute>
               <Users />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

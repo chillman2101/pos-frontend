@@ -1,36 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { CreditCard, Banknote, Smartphone, QrCode, Percent } from 'lucide-react';
-import { Button, Input } from '../common';
+import React, { useState, useEffect } from "react";
+import {
+  CreditCard,
+  Banknote,
+  Smartphone,
+  QrCode,
+  Percent,
+} from "lucide-react";
+import { Button, Input } from "../common";
+import settingsApi from "../../api/settingsApi";
 
 const PaymentPanel = ({
   subtotal,
   onComplete,
   onReset,
   isProcessing = false,
-  disabled = false
+  disabled = false,
 }) => {
+  // Settings state
+  const [settings, setSettings] = useState(null);
+
   // Discount state
-  const [discountType, setDiscountType] = useState('percent'); // 'percent' or 'nominal'
+  const [discountType, setDiscountType] = useState("percent"); // 'percent' or 'nominal'
   const [discountValue, setDiscountValue] = useState(0);
 
   // Tax state
-  const [taxPercent, setTaxPercent] = useState(10);
+  const [taxPercent, setTaxPercent] = useState(0);
+  const [isTaxEnabled, setIsTaxEnabled] = useState(false);
 
   // Payment method
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   // Amount paid (for cash)
   const [amountPaid, setAmountPaid] = useState(0);
 
   // Customer name (optional)
-  const [customerName, setCustomerName] = useState('');
+  const [customerName, setCustomerName] = useState("");
 
   // Notes (optional)
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
 
   // Calculate discount amount
   const discountAmount =
-    discountType === 'percent'
+    discountType === "percent"
       ? (subtotal * discountValue) / 100
       : discountValue;
 
@@ -42,33 +53,63 @@ const PaymentPanel = ({
   const finalAmount = subtotal - discountAmount + taxAmount;
 
   // Calculate change
-  const change = paymentMethod === 'cash' ? Math.max(0, amountPaid - finalAmount) : 0;
+  const change =
+    paymentMethod === "cash" ? Math.max(0, amountPaid - finalAmount) : 0;
 
   // Validation
   const isValid =
-    subtotal > 0 &&
-    (paymentMethod !== 'cash' || amountPaid >= finalAmount);
+    subtotal > 0 && (paymentMethod !== "cash" || amountPaid >= finalAmount);
 
   // Quick discount presets
   const quickDiscounts = [
-    { label: '5%', type: 'percent', value: 5 },
-    { label: '10%', type: 'percent', value: 10 },
-    { label: '15%', type: 'percent', value: 15 },
-    { label: '20%', type: 'percent', value: 20 },
+    { label: "5%", type: "percent", value: 5 },
+    { label: "10%", type: "percent", value: 10 },
+    { label: "15%", type: "percent", value: 15 },
+    { label: "20%", type: "percent", value: 20 },
   ];
 
   // Payment method options
   const paymentMethods = [
-    { id: 'cash', label: 'Cash', icon: Banknote, apiValue: 'cash' },
-    { id: 'debit', label: 'Debit Card', icon: CreditCard, apiValue: 'card' },
-    { id: 'credit', label: 'Credit Card', icon: CreditCard, apiValue: 'card' },
-    { id: 'ewallet', label: 'E-Wallet', icon: Smartphone, apiValue: 'qris' },
-    { id: 'qris', label: 'QRIS', icon: QrCode, apiValue: 'qris' },
+    { id: "cash", label: "Cash", icon: Banknote, apiValue: "cash" },
+    { id: "debit", label: "Debit Card", icon: CreditCard, apiValue: "card" },
+    { id: "credit", label: "Credit Card", icon: CreditCard, apiValue: "card" },
+    { id: "ewallet", label: "E-Wallet", icon: Smartphone, apiValue: "qris" },
+    { id: "qris", label: "QRIS", icon: QrCode, apiValue: "qris" },
   ];
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const response = await settingsApi.getSettings();
+      if (response.success && response.data) {
+        setSettings(response.data);
+
+        // Apply tax settings
+        if (response.data.tax) {
+          const taxEnabled = response.data.tax.tax_enabled !== false;
+          setIsTaxEnabled(taxEnabled);
+          if (taxEnabled) {
+            setTaxPercent(response.data.tax.tax_rate || 10);
+          } else {
+            setTaxPercent(0);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+      // Use defaults
+      setIsTaxEnabled(false);
+      setTaxPercent(0);
+    }
+  };
 
   // Auto-calculate amount paid for non-cash payments
   useEffect(() => {
-    if (paymentMethod !== 'cash') {
+    if (paymentMethod !== "cash") {
       setAmountPaid(finalAmount);
     }
   }, [paymentMethod, finalAmount]);
@@ -77,26 +118,27 @@ const PaymentPanel = ({
     if (!isValid || disabled) return;
 
     // Get API payment method value
-    const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
+    const selectedMethod = paymentMethods.find((m) => m.id === paymentMethod);
 
     onComplete({
       customer_name: customerName.trim() || undefined,
       discount_amount: Math.round(discountAmount),
       tax_amount: Math.round(taxAmount),
       payment_method: selectedMethod.apiValue,
-      paid_amount: paymentMethod === 'cash' ? Math.round(amountPaid) : undefined,
+      paid_amount:
+        paymentMethod === "cash" ? Math.round(amountPaid) : undefined,
       notes: notes.trim() || undefined,
     });
   };
 
   const handleReset = () => {
-    setDiscountType('percent');
+    setDiscountType("percent");
     setDiscountValue(0);
-    setTaxPercent(10);
-    setPaymentMethod('cash');
+    // Don't reset tax - it comes from settings
+    setPaymentMethod("cash");
     setAmountPaid(0);
-    setCustomerName('');
-    setNotes('');
+    setCustomerName("");
+    setNotes("");
     onReset && onReset();
   };
 
@@ -124,20 +166,26 @@ const PaymentPanel = ({
         <div className="flex justify-between text-neutral-700">
           <span>Subtotal</span>
           <span className="font-medium">
-            Rp {subtotal.toLocaleString('id-ID')}
+            Rp {subtotal.toLocaleString("id-ID")}
           </span>
         </div>
 
         {/* Discount */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-neutral-700">Diskon</label>
+            <label className="text-sm font-medium text-neutral-700">
+              Diskon
+            </label>
             <button
-              onClick={() => setDiscountType(discountType === 'percent' ? 'nominal' : 'percent')}
+              onClick={() =>
+                setDiscountType(
+                  discountType === "percent" ? "nominal" : "percent",
+                )
+              }
               className="text-xs bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded transition-colors"
               disabled={disabled}
             >
-              {discountType === 'percent' ? '% → Rp' : 'Rp → %'}
+              {discountType === "percent" ? "% → Rp" : "Rp → %"}
             </button>
           </div>
 
@@ -145,10 +193,18 @@ const PaymentPanel = ({
             <Input
               type="number"
               value={discountValue}
-              onChange={(e) => setDiscountValue(Math.max(0, parseFloat(e.target.value) || 0))}
+              onChange={(e) =>
+                setDiscountValue(Math.max(0, parseFloat(e.target.value) || 0))
+              }
               placeholder="0"
               disabled={disabled}
-              icon={discountType === 'percent' ? <Percent className="w-4 h-4" /> : <span>Rp</span>}
+              icon={
+                discountType === "percent" ? (
+                  <Percent className="w-4 h-4" />
+                ) : (
+                  <span>Rp</span>
+                )
+              }
             />
           </div>
 
@@ -172,35 +228,41 @@ const PaymentPanel = ({
           {discountAmount > 0 && (
             <div className="flex justify-between text-sm text-red-600">
               <span>Diskon</span>
-              <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
+              <span>- Rp {discountAmount.toLocaleString("id-ID")}</span>
             </div>
           )}
         </div>
 
         {/* Tax */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-700">Pajak (%)</label>
-          <Input
-            type="number"
-            value={taxPercent}
-            onChange={(e) => setTaxPercent(Math.max(0, parseFloat(e.target.value) || 0))}
-            placeholder="10"
-            disabled={disabled}
-            icon={<Percent className="w-4 h-4" />}
-          />
-          {taxAmount > 0 && (
-            <div className="flex justify-between text-sm text-neutral-600">
-              <span>Pajak</span>
-              <span>+ Rp {taxAmount.toLocaleString('id-ID')}</span>
-            </div>
-          )}
-        </div>
+        {isTaxEnabled && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">
+              {settings?.tax?.tax_label || "Pajak"} (%)
+            </label>
+            <Input
+              type="number"
+              value={taxPercent}
+              onChange={(e) =>
+                setTaxPercent(Math.max(0, parseFloat(e.target.value) || 0))
+              }
+              placeholder="10"
+              disabled={disabled}
+              icon={<Percent className="w-4 h-4" />}
+            />
+            {taxAmount > 0 && (
+              <div className="flex justify-between text-sm text-neutral-600">
+                <span>{settings?.tax?.tax_label || "Pajak"}</span>
+                <span>+ Rp {taxAmount.toLocaleString("id-ID")}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Total */}
         <div className="flex justify-between text-lg font-bold text-neutral-900 pt-3 border-t border-neutral-200">
           <span>TOTAL BAYAR</span>
           <span className="text-2xl text-primary-600">
-            Rp {finalAmount.toLocaleString('id-ID')}
+            Rp {finalAmount.toLocaleString("id-ID")}
           </span>
         </div>
       </div>
@@ -221,8 +283,8 @@ const PaymentPanel = ({
                 disabled={disabled}
                 className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
                   paymentMethod === method.id
-                    ? 'border-primary-600 bg-primary-50 text-primary-700'
-                    : 'border-neutral-200 hover:border-neutral-300'
+                    ? "border-primary-600 bg-primary-50 text-primary-700"
+                    : "border-neutral-200 hover:border-neutral-300"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -234,7 +296,7 @@ const PaymentPanel = ({
       </div>
 
       {/* Amount Paid (Cash only) */}
-      {paymentMethod === 'cash' && (
+      {paymentMethod === "cash" && (
         <div className="space-y-3 border-t border-neutral-200 pt-6">
           <label className="block text-sm font-medium text-neutral-700">
             Uang Dibayar
@@ -242,7 +304,9 @@ const PaymentPanel = ({
           <Input
             type="number"
             value={amountPaid}
-            onChange={(e) => setAmountPaid(Math.max(0, parseFloat(e.target.value) || 0))}
+            onChange={(e) =>
+              setAmountPaid(Math.max(0, parseFloat(e.target.value) || 0))
+            }
             placeholder="Masukkan jumlah uang..."
             disabled={disabled}
           />
@@ -256,7 +320,7 @@ const PaymentPanel = ({
                 className="px-2 py-1.5 text-xs bg-neutral-100 hover:bg-primary-100 hover:text-primary-700 rounded transition-colors"
                 disabled={disabled}
               >
-                {amount === finalAmount ? 'Pas' : `${(amount / 1000)}k`}
+                {amount === finalAmount ? "Pas" : `${amount / 1000}k`}
               </button>
             ))}
           </div>
@@ -265,8 +329,10 @@ const PaymentPanel = ({
           {amountPaid > 0 && (
             <div className="flex justify-between text-lg font-semibold pt-3 border-t border-neutral-200">
               <span className="text-neutral-700">Kembalian</span>
-              <span className={change >= 0 ? 'text-success-600' : 'text-red-600'}>
-                Rp {change.toLocaleString('id-ID')}
+              <span
+                className={change >= 0 ? "text-success-600" : "text-red-600"}
+              >
+                Rp {change.toLocaleString("id-ID")}
               </span>
             </div>
           )}
@@ -305,12 +371,12 @@ const PaymentPanel = ({
           disabled={!isValid || disabled || isProcessing}
           loading={isProcessing}
         >
-          {isProcessing ? 'Memproses...' : 'Selesaikan Transaksi'}
+          {isProcessing ? "Memproses..." : "Selesaikan Transaksi"}
         </Button>
       </div>
 
       {/* Validation message */}
-      {!isValid && subtotal > 0 && paymentMethod === 'cash' && (
+      {!isValid && subtotal > 0 && paymentMethod === "cash" && (
         <p className="text-sm text-red-600 text-center">
           Uang dibayar harus lebih dari atau sama dengan total bayar
         </p>
