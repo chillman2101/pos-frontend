@@ -7,6 +7,7 @@ import Products from './pages/Products';
 import Categories from './pages/Categories';
 import Transaction from './pages/Transaction';
 import TransactionHistory from './pages/TransactionHistory';
+import Users from './pages/Users';
 import TestAPI from './pages/TestAPI';
 import useAuthStore from './store/authStore';
 
@@ -66,6 +67,15 @@ function App() {
           element={
             <ProtectedRoute>
               <TransactionHistory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <Users />
             </ProtectedRoute>
           }
         />

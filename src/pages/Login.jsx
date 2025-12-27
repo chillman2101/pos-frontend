@@ -138,6 +138,24 @@ const Login = () => {
               <span className="font-semibold">Password:</span> admin123
             </p>
           </div>
+          <br />
+          <div className="text-xs text-primary-800 space-y-1">
+            <p>
+              <span className="font-semibold">Username:</span> cashier1
+            </p>
+            <p>
+              <span className="font-semibold">Password:</span> cashier123
+            </p>
+          </div>
+          <br />
+          <div className="text-xs text-primary-800 space-y-1">
+            <p>
+              <span className="font-semibold">Username:</span> manager1
+            </p>
+            <p>
+              <span className="font-semibold">Password:</span> manager123
+            </p>
+          </div>
         </div>
       </div>
     </div>
